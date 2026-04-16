@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライバー管理レポート</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      padding: 32px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .header .subtitle {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    .stats-bar {
+      background: white;
+      padding: 16px 24px;
+      display: flex;
+      gap: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-bottom: 1px solid #e8eaf0;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .stat-value.warning {
+      color: #e67e22;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
+      border-left: 4px solid #e8eaf0;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    }
+
+    .row-warning {
+      border-left-color: #f39c12;
+      background: linear-gradient(to right, #fffbf0, white 80px);
+    }
+
+    .row-danger {
+      border-left-color: #e74c3c;
+      background: linear-gradient(to right, #fff5f5, white 80px);
+    }
+
+    .card-header {
+      padding: 18px 20px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    .liver-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .liver-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-ok {
+      background: #e8f8f0;
+      color: #27ae60;
+    }
+
+    .badge-warning {
+      background: #fef5e0;
+      color: #e67e22;
+    }
+
+    .badge-danger {
+      background: #fdecea;
+      color: #c0392b;
+    }
+
+    .last-contact {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .label {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .date-value {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .days-ago {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .card-body {
+      padding: 14px 20px 16px;
+    }
+
+    .history-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    .history-item {
+      display: flex;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f5f5f7;
+      align-items: baseline;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-date {
+      font-size: 12px;
+      color: #999;
+      white-space: nowrap;
+      min-width: 90px;
+    }
+
+    .history-content {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .no-history {
+      font-size: 13px;
+      color: #bbb;
+      font-style: italic;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    @media (max-width: 600px) {
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .stats-bar {
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>ライバー管理レポート</h1>
+    <p class="subtitle">生成日時: 2026-04-16 19:46</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">登録ライバー数</span>
+      <span class="stat-value">63</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">要フォロー（1週間超）</span>
+      <span class="stat-value warning">5</span>
+    </div>
+  </div>
+
+  <div class="container">
+    
+      <div class="card row-danger">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">えみりん</span>
+            <span class="badge badge-danger">⚠ 2週間超</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-02</span>
+            <span class="days-ago">(14日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">イベントのエントリーを早速してくれたと連絡があった。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card row-danger">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">はーちゃん</span>
+            <span class="badge badge-danger">⚠ 2週間超</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-02</span>
+            <span class="days-ago">(14日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">一次審査通過後しばらく二次審査開始は未定だったのだが、昨日突然配信開始したと連絡があった。やってみて困ったことなどもなく今のところは楽しくできたとのこと。プロフ面など薄いので追加してもらうようお願いしている。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">換金手続きについて質問があったので説明した。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card row-warning">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">琉亜きらん</span>
+            <span class="badge badge-warning">! 1週間超</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-03</span>
+            <span class="days-ago">(13日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">3D化計画の返礼品などの草案をもらった。100Kなど大型特典もいいけど、何ヶ月か継続してある程度獲得した際の特典や、誕生日などのイベントなど何かしら絡められるといいのではないかと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-03</span>
+              <span class="history-content">月初に入ってリーグの伸びも良さそう。イベントもあるので、そちら使ってもらえれば目標としていた今月リーグ50は軽く超えられるんじゃないかと思う。引き続き進捗見て連絡と新しいリーグ目標も提案できたらと思う。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card row-warning">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">御伽話</span>
+            <span class="badge badge-warning">! 1週間超</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-06</span>
+            <span class="days-ago">(10日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">最速で二次審査突破した。過去の傾向から最短で突破したライバーはその後上位帯まで駆け上がっていくので、本人にもその可能性が高いことを伝えて頑張ろうと話をした。本人も上位帯に行きたい欲があり、やる気を出してくれている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card row-warning">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ハミエル</span>
+            <span class="badge badge-warning">! 1週間超</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-09</span>
+            <span class="days-ago">(7日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-09</span>
+              <span class="history-content">連絡取れた。プライベートがばたついていて申請できなかったとのこと。数日中に申し込みしてくれる予定。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-08</span>
+              <span class="history-content">面談後の一次審査申し込み連絡がないライバー。こちらから連絡してどんな状況か聞いている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">める</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-10</span>
+            <span class="days-ago">(6日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-10</span>
+              <span class="history-content">返礼品をリアルで売ってもいいか質問。イラスト含め個人で作ったものなので問題ないと伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">みかみん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-11</span>
+            <span class="days-ago">(5日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">一次審査に失敗したライバー。音源を送ってもらった。チェックしたところ歌唱力は正直かなり厳しい。修正点伝えてもう一度だけチャレンジしてもらおうと思う。ダメだった場合は他のアプリもあるということで促していく予定。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">一次審査に申し込みしてもらっている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">よしま</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-11</span>
+            <span class="days-ago">(5日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">一次審査に申し込みしてもらっている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">灯</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-11</span>
+            <span class="days-ago">(5日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">ワンフレーズシルバー賞獲得。音源も聞いて、とても良かったこと、次回以降も頑張りましょうと伝えた。別件でアカウントトラブルで換金がうまく行っておらず、カラーシング運営から回答が来たので手順を実施するよう伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">スミレ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-11</span>
+            <span class="days-ago">(5日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">ワンフレーズシルバー賞獲得。直接担当では最上位。普段昭和歌謡を歌っているけどバンプも悪くない。本人も喜んでおり、変わらず楽しく配信できている様子。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">猫村めぐる</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-13</span>
+            <span class="days-ago">(3日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-13</span>
+              <span class="history-content">二次審査中ライバー。何時間配信すれば、フォロワーが何人いれば通過できるか質問。数字というより、しっかりギフトを投げてもらうことが大事と伝えた。枠内限定コインをしっかり使ってもらって、フォロワーはまず100人目指そうと伝えている。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">二次審査を開始してから所属したライバー。現在プロフなど修正中。321に所属した場合時給があるのか問い合わせあり。321からの時給は無く、カラーシングのアプリで雑談ダイヤがそちらに当たると伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">うたうまるこ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-13</span>
+            <span class="days-ago">(3日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-12</span>
+              <span class="history-content">少し配信から遠ざかっていたので連絡。体調を崩しているようでお休みしているとのこと。快復次第また復帰してくれるとのこと。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-13</span>
+              <span class="history-content">ワンフレーズ敢闘賞受賞。歌はもともと上手い方。もう少し上にいても良さそう。休み気味だが、コンディション整ったらまた頑張ってもらえるようにしたい。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">kinariku</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-13</span>
+            <span class="days-ago">(3日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-13</span>
+              <span class="history-content">一次審査申請前ライバー。土曜日に録音して申請予定。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">一次審査突破。二次審査日程は4/21からの予定。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">碧</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-14</span>
+            <span class="days-ago">(2日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">LINEが新しくなったとのこと連絡。転職活動休止中で配信休んでいる。X連携が切れてしまったので対応して試してもらっている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">きょむたん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-14</span>
+            <span class="days-ago">(2日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">一次審査に申し込みをしてもらった。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">猫宮ハナ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-14</span>
+            <span class="days-ago">(2日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">配信復活していたので見に行った。メンタル不調とのことだったので触れず。配信コンスタントにしてくれてありがとうと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">りぃりぃ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">一次審査に申し込みをしてもらった。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">一次審査通過。4/21より配信開始予定。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">モグ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">1時間30分ほど初配信を行ってくれた。まずはフォロワーも獲得できて楽しくできたとのこと。今のところは困ったことなどもないとのこと。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-09</span>
+              <span class="history-content">二次審査中。歌声は悪くない。配信していてリーグが上がらないことが悩み。枠内限定コインなどの説明をして、ギフト量が増えれば上がっていくので諦めず頑張ろうと伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">SANA</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">リーグがしばらく20代前半で停滞していたが、先月30まで上がってきた。調子上向いているので、最低35できれば40を今月目指してみないかと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-03</span>
+              <span class="history-content">こちらも連絡久しぶりなリーグ30付近のライバー。こちらもイベントを使ってリスナーさんに目標掲げてリーグ伸ばしに上手く使ってほしいと話をした。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">くろねこ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-09</span>
+              <span class="history-content">お試し配信中。リプルさん経由で面談に来てくれた。配信状況などヒアリングして困っていることないか聴いている。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">二次審査中ライバー。配信見れたので連絡。歌はそこまで、テンションも高くないが、他アプリ時代のリスナーが来ており固定リスナーはいる状態。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ほじょすけ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-10</span>
+              <span class="history-content">ワンフレーズ敢闘賞獲得。あと1人抜かしていればブロンズ賞だったので惜しい。初参加でそこまで行けたのは立派。さすがと伝えた。本人も挑戦意欲があるので頑張ろうと話した。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">上位帯ライバー。久々に配信見れたので連絡。弾き語りでオリジナル曲も歌っておりアイテム飛んでいた。歌もオリジナル曲のメロも良い。地元スーパーのテーマソングも歌っているとのこと。配信見に行ったこと伝えたら喜んでいた。もっと上いけるポテンシャルあり。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ちぃ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">お試し配信が終わったと報告あり。二次審査の説明をした。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">お試し配信開始。2日目で歌推し獲得。進み具合順調。このまま頑張っていきましょうと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">るねら</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-10</span>
+              <span class="history-content">二次審査中。配信見に行ったので連絡。歌声はかっこいい系でボカロ好き。本人曰く噛み噛みだったとのこと。楽しそうに配信していて歌推しは既に3人いるからいい感じと伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">Amgth</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">久々に配信復帰。お試し配信を実施。身内が来てくれて配信盛り上げてくれた。これからは昼夜に分けて配信する予定。フォロワーを増やしたいので、新規の方が配信に来たらフォロー呼びかけてみてと伝えている。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-14</span>
+              <span class="history-content">配信復活、最近所属。初期に二次審査通過。配信見たらハイトーンで非常に良い。V系好き。配信見たこと伝えたら喜んでいた。V系好きリスナーに見てもらえばリスナー増えそう。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">妃織</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-08</span>
+              <span class="history-content">二次審査開始ライバー。配信開始のお礼とやってみて困ったことなどないか連絡している。現状は困ったこともなく楽しく配信できている。ダイヤの換金システムについて質問があったので伝えている。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-13</span>
+              <span class="history-content">二次審査突破。リーグやイベント関係で新しい目標を掲げて伸ばしていきましょうと話をしている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">まっきぃ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">来週あたり配信復活する予定。その前に一回電話相談したいとのことなので日付け調整中。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-08</span>
+              <span class="history-content">電話面談予定でしたがスケジュール合わなく、再度調整予定。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ポン</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-13</span>
+              <span class="history-content">二次審査開始ライバー。現状は緊張するけど楽しく配信できているとのこと。ギフト反応に幅を持たせたいとのことで案を出して、トップライバーの枠にも行ってみることをオススメしている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">RoA</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">ナイトビジョンについて質問あり。渋谷の321本社のビジョンと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-11</span>
+              <span class="history-content">やり取り継続。タイミング良かったのでカラーシングイベントのことを伝えて参加してみてと改めて伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">Lazo</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">昇格メーターの説明やリーグどれくらい上げれば良いかの目安について質問があったので回答した。リーグも大事だけどそれよりもフォロワーや歌推しを増やすことに目を向けてほしいと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">リスナーから色々二次審査について言われたようで不安がっているのでこちらの言った通りにしてもらえれば大丈夫、オーバーに伝えてきている場合もあるから気にしすぎないようにと伝えた。配信を見にくるかも聞かれ、タイミングが合えば見に行くと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">リプル</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-04</span>
+              <span class="history-content">タイミングが合ったので配信を見に行って伝えた。若干気難しい年配の方だがリーグは35と意外と高めなので大事にしたいところ。リーグも40をまずは目指したいと話した。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-08</span>
+              <span class="history-content">面談者の中にリプルさんの枠から紹介を受けた方がいたので、本人にもその旨伝えてお礼をしている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">姫暁</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">カラーシングイベントの選択肢がエラーが起きていると連絡をもらった。八木さんにお願いして対応済み。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">上旬のリーグが伸びていたので連絡。誕生日絡みで上がったとのこと。地方代表リーグをキープできるように頑張りたいとのこと。個人的にはリーグ40くらいを目指せると思うのでその旨も伝えて頑張ろうと話した。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">アキラ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">二次審査突破。本人も喜んでいる。次の目標としてリーグ35を提案。カラーシングイベントも入賞を目指してみるなどやってみていいと話した。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">さけにゃん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらから連絡をとった。なかなか体調が良くならず、声に影響が出ている。時間もなく歌うのが困難で配信ができないとのこと。またゆっくり体調整えて調子良くなったら復帰してほしいと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">玲音</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-03</span>
+              <span class="history-content">今までイベントの告知など流してもあまり興味を示してもらえなかったが、直近で厚めに連絡とってたのもあってか反応もらえた。このまま参加まで持っていけるよう期限前にもまた促してみたいと思う。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">リーグ66以降は月末にリセット幅が大きくなることについて質問あり。現状だと幾つになるのか気にしていたので、表も渡した。トップライバーの域に足を踏み入れたので、これから大変な部分もあるが頑張ろうと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">そら</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">配信開始したので連絡。なかなかギフトがもらえないとのことで、枠内限定コインなどでも投げてもらうことを呼びかけたりするのも有効と伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">4/12より二次審査を開始する。5/1まで休職期間なのでそこまでに二次審査突破を目指そうと話をした。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">夜狐</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">ダイヤ換金をしたことがなかったようで問い合わせを受けた。web版から口座登録など必要なのでそちらの案内と、レートの説明をした。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">雪国ゆー</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-06</span>
+              <span class="history-content">配信を見に行ったので連絡。久々に見たが歌も上手くトークも上手。後少しでリーグ50まで行けるライバー。目標決めたいけど、繁忙期でゲリラ的な配信のため決めづらいとのこと。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">まいちぃ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">今月リーグ30付近を停滞して終わってしまった。4月は40まで頑張ってみましょうと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-04</span>
+              <span class="history-content">配信を見たので連絡。リスナーは3名程度だったが歌推しは今月6名ほど獲得している。リーグが30手前で停滞しているので、イベントの案内をしてこれを機にまずは35くらいを目指してみませんかと話をした。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ぶらいと</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">配信を見に行った。いい声。歌もそれなり。二次審査通過後に所属してもらった方で、そこまで連絡を取れていなかったのでこれを機に連絡していく。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-04</span>
+              <span class="history-content">配信を見に行ったことを伝えたときに、ライバーリスナーとリスナーのバランスについて相談があった。ライバーとの関わりを大事にしていて、トークが盛り上がるとリスナーを置いてきぼりにしてしまうことを気にされている。ライバー同士の繋がりも大事だけど、イベントなどで力になってくれるのは純リスナーなので、そちらを大事にするようにコントロールしてみてほしいと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">山切寧子</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">やはり配信が不安とのことで、5/1まで再度カラーシングを勉強する期間にするとのこと。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-02</span>
+              <span class="history-content">喉の調子が整ったと連絡があった。お試し配信を10日までに3日分行う形で話をした。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-03</span>
+              <span class="history-content">二次審査前ライバー。ネットで拾ってきた情報でまた開始が延期しそうな雰囲気を出している。去年登録もしていてこのままだといつまで経っても始められない方なので、どのタイミングで配信してもキチンとやってもらえれば大差ないこと、今のタイミングなら10日までに3日間お試し配信してもらえれば問題ないこと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">コ汰</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-03</span>
+              <span class="history-content">最近あまり連絡が取れていなかったライバー。イベントの告知と一緒に近況など聞いている。20付近で停滞しているので、このイベントを上手く使って30くらいを今月は目指してみないかと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ジョー君</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-01</span>
+              <span class="history-content">リーグがしばらく20代前半で停滞していたが、先月30まで上がってきた。調子上向いているので、最低35できれば40を今月目指してみないかと伝えた。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">みぃぴぴ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">花音ネム</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">kima</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">アルファ</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ぺたぬんてぃうす</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">あとす</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">おピンちゃん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">さっくん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">YUKA</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">MIYA21</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">noa</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">Ryoto</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">となみん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ごう(アガサ)</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">歌鿿</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ミル</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">臼井</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">八-ya</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">ジウト</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-15</span>
+            <span class="days-ago">(1日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-15</span>
+              <span class="history-content">こちらイベント案内リマインドをしています。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">saa</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-16</span>
+            <span class="days-ago">(0日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-16</span>
+              <span class="history-content">歌推しのシステムについて説明。配信前に自分でも獲得して体験してみてほしいと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-08</span>
+              <span class="history-content">プロフィールを再度修正した。配信開始までに日数があるので、気に入ったライバーの枠に行って歌推しを獲得したりしてアプリに慣れてほしいと伝えている。</span>
+            </div>
+        </div>
+      </div>
+      <div class="card ">
+        <div class="card-header">
+          <div class="liver-info">
+            <span class="liver-name">さとちゃん</span>
+            <span class="badge badge-ok">✓ 連絡済</span>
+          </div>
+          <div class="last-contact">
+            <span class="label">最終連絡日</span>
+            <span class="date-value">2026-04-16</span>
+            <span class="days-ago">(0日前)</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="history-title">最近のやり取り</p>
+          
+            <div class="history-item">
+              <span class="history-date">2026-04-16</span>
+              <span class="history-content">ダイヤ還元率について質問あり。同時期に始めたライバーとダイヤ数が違うので事務所から引かれていると思っている。そうではなく、アイテムの数などで変わってくるものだと伝えた。</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">2026-04-04</span>
+              <span class="history-content">換金について質問があった。口座登録の案内と、レートなど説明した。</span>
+            </div>
+        </div>
+      </div>
+  </div>
+
+  <div class="footer">
+    ライバー管理システム &mdash; 最終連絡日が古い順に表示
+  </div>
+
+</body>
+</html>

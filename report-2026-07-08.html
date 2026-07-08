@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日報 2026-07-08</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      padding: 32px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .header .subtitle { font-size: 13px; opacity: 0.6; }
+
+    .stats-bar {
+      background: white;
+      padding: 16px 24px;
+      display: flex;
+      gap: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-bottom: 1px solid #e8eaf0;
+    }
+    .stat-item { display: flex; align-items: center; gap: 8px; }
+    .stat-label { font-size: 13px; color: #666; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+
+    .container { max-width: 900px; margin: 32px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px; }
+
+    .section-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: #0f3460; margin: 12px 4px 2px;
+    }
+
+    .card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden; border-left: 4px solid #e8eaf0;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+
+    /* timeline row */
+    .tl-item { display: flex; gap: 16px; padding: 16px 20px; align-items: baseline; border-bottom: 1px solid #f5f5f7; }
+    .tl-item:last-child { border-bottom: none; }
+    .tl-time { font-size: 13px; font-weight: 700; color: #0f3460; white-space: nowrap; min-width: 110px; }
+    .tl-body { flex: 1; }
+    .tl-task { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+    .tl-empty .tl-task { color: #bbb; font-weight: 400; font-style: italic; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-left: 8px; }
+    .badge-field { background: #e8f0fe; color: #1a4d7a; }
+    .badge-office { background: #eef0f5; color: #555; }
+    .badge-auto { background: #e8f8f0; color: #27ae60; }
+    .badge-none { background: #f2f2f2; color: #aaa; }
+
+    ul.plain { list-style: none; }
+    ul.plain li { padding: 12px 20px; border-bottom: 1px solid #f5f5f7; font-size: 14px; color: #333; }
+    ul.plain li:last-child { border-bottom: none; }
+    .prio { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-right: 10px; }
+    .prio-high { background: #fdecea; color: #c0392b; }
+    .prio-mid { background: #fef5e0; color: #e67e22; }
+    .prio-low { background: #eef0f5; color: #667eea; }
+    .chk { color: #ccc; margin-right: 8px; }
+
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; }
+
+    @media (max-width: 600px) {
+      .stats-bar { flex-direction: column; gap: 16px; }
+      .tl-item { flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>日報</h1>
+    <div class="subtitle">2026年7月8日（水）</div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><span class="stat-label">稼働ブロック</span><span class="stat-value">4</span></div>
+    <div class="stat-item"><span class="stat-label">主業務</span><span class="stat-value">レコーディング</span></div>
+  </div>
+
+  <div class="container">
+
+    <div class="section-title">タイムライン</div>
+    <div class="card">
+      <div class="tl-item">
+        <div class="tl-time">10:00〜12:00</div>
+        <div class="tl-body"><span class="tl-task">準備、移動</span><span class="badge badge-office">準備</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">13:00〜17:00</div>
+        <div class="tl-body"><span class="tl-task">レコーディング</span><span class="badge badge-field">現場対応</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">17:00〜20:00</div>
+        <div class="tl-body"><span class="tl-task">Dr.Brown AFコース受講準備、ライバー返信、ライブ配信視聴と視聴したライバーへの連絡（2名）</span><span class="badge badge-office">業務</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">20:00〜22:30</div>
+        <div class="tl-body"><span class="tl-task">Dr.Brown AFコース受講</span><span class="badge badge-field">受講</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">明日やること</div>
+    <div class="card">
+      <ul class="plain">
+        <li><span class="chk">☐</span>ワンフレーズの結果が出たので各受賞者に連絡、一緒に近況チェックなどフォロー</li>
+        <li><span class="chk">☐</span>一次審査を通らないライバーから連絡があるので歌唱動画サポートなど、AFコースを踏まえてワンコーラス案件の修正</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer">生成: 2026-07-08 ／ liver-management</div>
+</body>
+</html>
